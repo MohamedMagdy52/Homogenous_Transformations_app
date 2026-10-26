@@ -39,7 +39,16 @@ function MotionCue({ step, pose }: { step: TransformStep; pose: Mat4 }) {
   return <group ref={group}><group rotation={rotation}>{step.kind==='rotate'?<group><mesh><torusGeometry args={[.72,.025,12,64,Math.PI*1.65]}/><meshBasicMaterial color="#f6c453"/></mesh><mesh position={[-.64,.34,0]} rotation={[0,0,-.75]}><coneGeometry args={[.09,.22,16]}/><meshBasicMaterial color="#f6c453"/></mesh></group>:<AxisArrow axis={step.axis} color="#f6c453"/>}</group></group>;
 }
 
-export function TransformScene({pose,previous,activeStep,moving}:{pose:Mat4;previous?:Mat4;activeStep?:TransformStep;moving:boolean}) { return <Canvas dpr={[1,1.6]} gl={{antialias:true}} fallback={<div className="webgl-fallback">3D rendering is unavailable in this browser.</div>}>
+function WorldBeacon() {
+  const ring=useRef<THREE.Mesh>(null);
+  useFrame(({clock})=>{if(ring.current){const pulse=1+Math.sin(clock.elapsedTime*4)*.15;ring.current.scale.setScalar(pulse);ring.current.rotation.z=clock.elapsedTime*.35}});
+  return <group position={[0,.025,0]}>
+    <mesh ref={ring} rotation={[Math.PI/2,0,0]}><torusGeometry args={[.38,.025,10,48]}/><meshBasicMaterial color="#ffffff" transparent opacity={.9}/></mesh>
+    <Html position={[0,.42,0]} center><span className="world-beacon-label">◎ WORLD ORIGIN</span></Html>
+  </group>;
+}
+
+export function TransformScene({pose,previous,activeStep,moving,highlightWorld}:{pose:Mat4;previous?:Mat4;activeStep?:TransformStep;moving:boolean;highlightWorld:boolean}) { return <Canvas dpr={[1,1.6]} gl={{antialias:true}} fallback={<div className="webgl-fallback">3D rendering is unavailable in this browser.</div>}>
   <color attach="background" args={['#070b14']}/><fog attach="fog" args={['#070b14',10,24]}/><PerspectiveCamera makeDefault position={[5,4.2,6]} fov={45}/><ambientLight intensity={.8}/><directionalLight position={[4,7,3]} intensity={1.8}/><Grid args={[20,20]} cellColor="#182c45" sectionColor="#284d76" fadeDistance={18} fadeStrength={1}/>
-  <Frame pose={[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]} label="WORLD" palette={WORLD} muted/>{previous&&moving&&<Frame pose={previous} label="START" palette={PREVIOUS} muted/>}<Frame pose={pose} label="BODY" palette={BODY}/>{activeStep&&moving&&<MotionCue step={activeStep} pose={pose}/>}<OrbitControls makeDefault enableDamping dampingFactor={.08}/>
+  <Frame pose={[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]} label="WORLD" palette={WORLD} muted={!highlightWorld}/>{highlightWorld&&<WorldBeacon/>}{previous&&moving&&<Frame pose={previous} label="START" palette={PREVIOUS} muted/>}<Frame pose={pose} label="BODY" palette={BODY}/>{activeStep&&moving&&<MotionCue step={activeStep} pose={pose}/>}<OrbitControls makeDefault enableDamping dampingFactor={.08}/>
 </Canvas> }
