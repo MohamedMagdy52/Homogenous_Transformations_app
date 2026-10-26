@@ -1,6 +1,6 @@
 # RoboTransform 3D
 
-An interactive robotics lab for visualizing fixed-frame and body-frame rotations, translations, homogeneous transforms, and transformation chains.
+An interactive robotics lab for visualizing fixed-frame and body-frame rotations, translations, homogeneous transforms, and transformation chains with smooth animated playback.
 
 ## Run
 
@@ -15,7 +15,7 @@ Use `npm test` for the transformation math tests and `npm run build` for a produ
 
 The app uses right-handed coordinate systems, active transformations, and column vectors. A world-frame operation is premultiplied (`T′ = A T`); a body-frame operation is postmultiplied (`T′ = T A`). Add and reorder operations in the left panel, select timeline steps, and use the playback bar to animate the chain. Drag, zoom, and pan the 3D view independently.
 
-The guided lab covers Problems 1–7 from Tutorial 2. The PDF extraction does not preserve the axis arrows in the Problem 7 diagram reliably, so the app records that ambiguity instead of assigning unverified orientations.
+The muted RGB world frame remains fixed while the high-contrast orange, yellow, and cyan body frame moves. Press Play to animate the full sequence with eased motion, or use the step and speed controls for closer inspection.
 
 ## Architecture
 
