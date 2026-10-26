@@ -10,6 +10,7 @@ export const translation=(axis:Axis,d:number):Mat4=>{const m=identity();m['xyz'.
 export const matrixFor=(s:TransformStep,fraction=1)=>s.kind==='rotate'?rotation(s.axis,s.value*fraction):translation(s.axis,s.value*fraction);
 export const applyStep=(pose:Mat4,s:TransformStep,fraction=1)=>s.frame==='world'?mul(matrixFor(s,fraction),pose):mul(pose,matrixFor(s,fraction));
 export const compose=(steps:TransformStep[],count=steps.length)=>steps.slice(0,count).reduce((p,s)=>applyStep(p,s),identity());
+export const symbolicOrder=(steps:TransformStep[]):TransformStep[]=>steps.reduce<TransformStep[]>((product,step)=>step.frame==='world'?[step,...product]:[...product,step],[]);
 export const inverse=(t:Mat4):Mat4=>{const out=identity();for(let i=0;i<3;i++)for(let j=0;j<3;j++)out[i][j]=t[j][i];for(let i=0;i<3;i++)out[i][3]=-out[i].slice(0,3).reduce((s,v,j)=>s+v*t[j][3],0);return out};
 export const relative=(worldA:Mat4,worldB:Mat4)=>mul(inverse(worldA),worldB);
 export const clean=(v:number)=>Math.abs(v)<1e-10?0:Math.abs(v-1)<1e-10?1:Math.abs(v+1)<1e-10?-1:v;
