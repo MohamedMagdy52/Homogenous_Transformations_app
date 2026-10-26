@@ -12,7 +12,7 @@ export function usePlayback(count:number) {
     let raf=0;
     let last=performance.now();
     const tick=(now:number)=>{
-      const next=Math.min(count,current.current+(now-last)/1800*speed);
+      const next=Math.min(count,current.current+Math.max(0,now-last)/1800*speed);
       last=now;
       current.current=next;
       setCursor(next);
