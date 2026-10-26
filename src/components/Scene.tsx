@@ -1,13 +1,27 @@
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Grid, Html, OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { Grid, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Axis, Mat4, TransformStep } from '../math/transforms';
 
 type Palette = { x: string; y: string; z: string; origin: string };
 const WORLD: Palette = { x: '#9b3342', y: '#257153', z: '#285d99', origin: '#71839a' };
 const BODY: Palette = { x: '#ff6b35', y: '#ffe45e', z: '#26d9ff', origin: '#ffffff' };
 const PREVIOUS: Palette = { x: '#72516f', y: '#72516f', z: '#72516f', origin: '#846e84' };
+
+// Labels stay inside WebGL, avoiding extra DOM/React roots during playback.
+function SceneLabel({text,color,position}:{text:string;color:string;position:[number,number,number]}) {
+  const texture=useMemo(()=>{
+    const canvas=document.createElement('canvas');canvas.width=512;canvas.height=96;
+    const ctx=canvas.getContext('2d')!;
+    ctx.fillStyle='#091321';ctx.fillRect(0,0,512,96);
+    ctx.strokeStyle=color;ctx.lineWidth=4;ctx.strokeRect(2,2,508,92);
+    ctx.fillStyle=color;ctx.font='bold 36px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,256,48);
+    return new THREE.CanvasTexture(canvas);
+  },[text,color]);
+  useEffect(()=>()=>texture.dispose(),[texture]);
+  return <sprite position={position} scale={[text.length>8?1.25:.7,.19,1]}><spriteMaterial map={texture} depthTest={false} transparent/></sprite>;
+}
 
 function AxisArrow({ axis, color, muted = false }: { axis: Axis; color: string; muted?: boolean }) {
   const rotation: [number, number, number] = axis === 'x' ? [0, 0, -Math.PI / 2] : axis === 'z' ? [Math.PI / 2, 0, 0] : [0, 0, 0];
@@ -25,9 +39,9 @@ function Frame({ pose, label, palette, muted = false }: { pose: Mat4; label: str
   useFrame(() => { if (group.current) { group.current.matrixAutoUpdate = false; group.current.matrix.copy(matrix); } });
   return <group ref={group}>
     <AxisArrow axis="x" color={palette.x} muted={muted} /><AxisArrow axis="y" color={palette.y} muted={muted} /><AxisArrow axis="z" color={palette.z} muted={muted} />
-    {(['x','y','z'] as Axis[]).map(axis => <Html key={axis} position={axis==='x'?[1.65,0,0]:axis==='y'?[0,1.65,0]:[0,0,1.65]} center><span className={`axis-label ${label.toLowerCase()}`} style={{color:palette[axis]}}>{label[0]}·{axis.toUpperCase()}</span></Html>)}
+    {(['x','y','z'] as Axis[]).map(axis => <SceneLabel key={axis} position={axis==='x'?[1.65,0,0]:axis==='y'?[0,1.65,0]:[0,0,1.65]} color={palette[axis]} text={`${label[0]}·${axis.toUpperCase()}`}/>)}
     <mesh><sphereGeometry args={[muted?.06:.1,18,18]}/><meshStandardMaterial color={palette.origin} transparent opacity={muted?.55:1} emissive={palette.origin} emissiveIntensity={.2}/></mesh>
-    <Html position={[0,-.28,0]} center><span className={`frame-label ${label.toLowerCase()}`}>{label}</span></Html>
+    <SceneLabel position={[0,-.28,0]} color={palette.origin} text={label}/>
   </group>;
 }
 
@@ -44,7 +58,7 @@ function WorldBeacon() {
   useFrame(({clock})=>{if(ring.current){const pulse=1+Math.sin(clock.elapsedTime*4)*.15;ring.current.scale.setScalar(pulse);ring.current.rotation.z=clock.elapsedTime*.35}});
   return <group position={[0,.025,0]}>
     <mesh ref={ring} rotation={[Math.PI/2,0,0]}><torusGeometry args={[.38,.025,10,48]}/><meshBasicMaterial color="#ffffff" transparent opacity={.9}/></mesh>
-    <Html position={[0,.42,0]} center><span className="world-beacon-label">◎ WORLD ORIGIN</span></Html>
+    <SceneLabel position={[0,.42,0]} color="#ffffff" text="WORLD ORIGIN"/>
   </group>;
 }
 

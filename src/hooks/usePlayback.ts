@@ -6,7 +6,6 @@ export function usePlayback(count:number) {
   const [playing,setPlaying]=useState(false);
   const [speed,setSpeed]=useState(1);
   const current=useRef(cursor);
-  current.current=cursor;
   useEffect(()=>{
     if(!playing)return;
     let raf=0;
@@ -22,11 +21,12 @@ export function usePlayback(count:number) {
     raf=requestAnimationFrame(tick);
     return()=>cancelAnimationFrame(raf);
   },[playing,count,speed]);
-  const seek=(step:number)=>{setPlaying(false);current.current=step;setCursor(step);};
+  const seek=(step:number)=>{const safe=Math.max(0,Math.min(count,step));setPlaying(false);current.current=safe;setCursor(safe);};
   const toggle=()=>{
     if(playing){setPlaying(false);return;}
     if(current.current>=count){current.current=0;setCursor(0);}
     if(count)setPlaying(true);
   };
-  return {selected:Math.floor(cursor),progress:cursor-Math.floor(cursor),playing,speed,setSpeed,seek,toggle};
+  const safeCursor=Math.max(0,Math.min(count,cursor));
+  return {selected:Math.floor(safeCursor),progress:safeCursor-Math.floor(safeCursor),playing,speed,setSpeed,seek,toggle};
 }
